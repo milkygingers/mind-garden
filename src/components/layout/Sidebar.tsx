@@ -30,6 +30,7 @@ import {
   Edit3,
   Palette,
   Timer,
+  Database,
 } from "lucide-react";
 import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
 
@@ -291,7 +292,7 @@ export function Sidebar() {
       </div>
 
       {/* Timer */}
-      <div className="px-3 mb-2">
+      <div className="px-3 mb-1">
         <Link
           href="/timer"
           className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
@@ -302,6 +303,21 @@ export function Sidebar() {
         >
           <Timer className="w-4 h-4" />
           Focus Timer
+        </Link>
+      </div>
+
+      {/* Databases */}
+      <div className="px-3 mb-2">
+        <Link
+          href="/databases"
+          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+            pathname?.startsWith("/databases")
+              ? "bg-indigo-500/10 text-indigo-500"
+              : "hover:bg-[var(--card-hover)]"
+          }`}
+        >
+          <Database className="w-4 h-4" />
+          Databases
         </Link>
       </div>
 

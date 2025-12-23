@@ -26,10 +26,11 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  folders  Folder[]
-  pages    Page[]
-  accounts Account[]
-  sessions Session[]
+  folders   Folder[]
+  pages     Page[]
+  databases Database[]
+  accounts  Account[]
+  sessions  Session[]
 }
 
 model Account {
@@ -117,4 +118,44 @@ model Page {
 
   @@index([userId])
   @@index([folderId])
+}
+
+// ============================================
+// DATABASES (Notion-style)
+// ============================================
+
+model Database {
+  id          String   @id @default(cuid())
+  name        String   @default("Untitled Database")
+  icon        String?
+  color       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Schema: JSON array of column definitions
+  // [{ id, name, type, options }]
+  columns     String   @db.Text @default("[]")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rows DatabaseRow[]
+
+  @@index([userId])
+}
+
+model DatabaseRow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Row data: JSON object with column values
+  // { columnId: value, columnId: value }
+  data      String   @db.Text @default("{}")
+
+  databaseId String
+  database   Database @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+
+  @@index([databaseId])
 }
