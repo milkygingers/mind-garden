@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
-import { Star, FileText, ArrowRight } from "lucide-react";
+import { Star, ArrowRight } from "lucide-react";
 
 export default async function FavoritesPage() {
   const session = await getServerSession(authOptions);

@@ -9,7 +9,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, Plus, ArrowRight, FolderOpen } from "lucide-react";
+import { ArrowLeft, FileText, ArrowRight, FolderOpen } from "lucide-react";
 import { NewPageButton } from "./NewPageButton";
 
 interface FolderPageProps {
