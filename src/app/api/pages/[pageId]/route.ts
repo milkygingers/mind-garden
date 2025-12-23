@@ -29,6 +29,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       where: { id: pageId, userId: session.user.id },
       include: {
         folder: { select: { id: true, name: true, icon: true } },
+        tags: { select: { id: true, name: true, color: true } },
       },
     });
 

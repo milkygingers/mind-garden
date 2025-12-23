@@ -30,6 +30,7 @@ model User {
   pages     Page[]
   databases Database[]
   habits    Habit[]
+  tags      Tag[]
   accounts  Account[]
   sessions  Session[]
 }
@@ -116,6 +117,8 @@ model Page {
 
   folderId String?
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  tags     Tag[]   @relation("PageTags")
 
   @@index([userId])
   @@index([folderId])
@@ -204,4 +207,24 @@ model HabitLog {
   @@unique([habitId, date]) // One log per habit per day
   @@index([habitId])
   @@index([date])
+}
+
+// ============================================
+// TAGS (Organization)
+// ============================================
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#6b7280")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pages Page[] @relation("PageTags")
+
+  @@unique([userId, name]) // Unique tag name per user
+  @@index([userId])
 }

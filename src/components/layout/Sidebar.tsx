@@ -34,6 +34,7 @@ import {
   Target,
   Settings,
   Download,
+  Tag,
 } from "lucide-react";
 import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
@@ -347,6 +348,21 @@ export function Sidebar() {
         >
           <Database className="w-4 h-4" />
           Databases
+        </Link>
+      </div>
+
+      {/* Tags */}
+      <div className="px-3 mb-1">
+        <Link
+          href="/tags"
+          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+            pathname === "/tags"
+              ? "bg-violet-500/10 text-violet-500"
+              : "hover:bg-[var(--card-hover)]"
+          }`}
+        >
+          <Tag className="w-4 h-4" />
+          Tags
         </Link>
       </div>
 

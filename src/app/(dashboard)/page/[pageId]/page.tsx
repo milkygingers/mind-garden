@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageEditor } from "@/components/editor/PageEditor";
 import { ColorPicker, COLOR_NAMES } from "@/components/ui/ColorPicker";
+import { TagPicker } from "@/components/tags/TagPicker";
 import {
   ArrowLeft,
   Star,
@@ -42,6 +43,11 @@ interface PageData {
     name: string;
     icon: string | null;
   } | null;
+  tags: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
 }
 
 // Common emoji options for quick selection
@@ -411,6 +417,16 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
             className="w-full text-4xl font-display font-bold bg-transparent border-none focus:outline-none placeholder:text-[var(--muted)]"
             style={page.color ? { color: page.color } : undefined}
           />
+          
+          {/* Tags */}
+          <div className="mt-3">
+            <TagPicker
+              pageId={page.id}
+              selectedTags={page.tags || []}
+              onTagsChange={(tags) => setPage((prev) => prev ? { ...prev, tags } : prev)}
+            />
+          </div>
+          
           <p className="text-sm text-[var(--muted)] mt-2 flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
             Last edited {new Date(page.updatedAt).toLocaleDateString()}
