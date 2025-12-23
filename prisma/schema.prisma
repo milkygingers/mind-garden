@@ -29,6 +29,7 @@ model User {
   folders   Folder[]
   pages     Page[]
   databases Database[]
+  habits    Habit[]
   accounts  Account[]
   sessions  Session[]
 }
@@ -158,4 +159,44 @@ model DatabaseRow {
   database   Database @relation(fields: [databaseId], references: [id], onDelete: Cascade)
 
   @@index([databaseId])
+}
+
+// ============================================
+// HABITS (Daily Tracking)
+// ============================================
+
+model Habit {
+  id          String   @id @default(cuid())
+  name        String
+  icon        String?  @default("✨")
+  color       String?  @default("#10b981")
+  description String?
+  frequency   String   @default("daily") // daily, weekdays, weekends, custom
+  targetDays  String?  // JSON array for custom: ["mon", "tue", "wed"]
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  logs HabitLog[]
+
+  @@index([userId])
+}
+
+model HabitLog {
+  id          String   @id @default(cuid())
+  date        DateTime // The day this log is for
+  completed   Boolean  @default(false)
+  note        String?  // Optional note for the day
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  habitId String
+  habit   Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date]) // One log per habit per day
+  @@index([habitId])
+  @@index([date])
 }

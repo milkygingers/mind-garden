@@ -31,6 +31,7 @@ import {
   Palette,
   Timer,
   Database,
+  Target,
 } from "lucide-react";
 import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
 
@@ -303,6 +304,21 @@ export function Sidebar() {
         >
           <Timer className="w-4 h-4" />
           Focus Timer
+        </Link>
+      </div>
+
+      {/* Habits */}
+      <div className="px-3 mb-1">
+        <Link
+          href="/habits"
+          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+            pathname === "/habits"
+              ? "bg-emerald-500/10 text-emerald-500"
+              : "hover:bg-[var(--card-hover)]"
+          }`}
+        >
+          <Target className="w-4 h-4" />
+          Habits
         </Link>
       </div>
 
