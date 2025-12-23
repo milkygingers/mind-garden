@@ -299,17 +299,18 @@ function CellEditor({
 
   // Checkbox type
   if (column.type === "checkbox") {
+    const isChecked = Boolean(value);
     return (
       <div className="flex items-center justify-center h-10">
         <button
-          onClick={() => onChange(!value)}
+          onClick={() => onChange(!isChecked)}
           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-            value
+            isChecked
               ? "bg-garden-500 border-garden-500 text-white"
               : "border-[var(--border)] hover:border-garden-500"
           }`}
         >
-          {value && <Check className="w-3 h-3" />}
+          {isChecked && <Check className="w-3 h-3" />}
         </button>
       </div>
     );
