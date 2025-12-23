@@ -33,6 +33,7 @@ import {
   Database,
   Target,
   Settings,
+  Download,
 } from "lucide-react";
 import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
 
@@ -339,7 +340,7 @@ export function Sidebar() {
       </div>
 
       {/* Settings */}
-      <div className="px-3 mb-2">
+      <div className="px-3 mb-1">
         <Link
           href="/settings"
           className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
@@ -350,6 +351,21 @@ export function Sidebar() {
         >
           <Settings className="w-4 h-4" />
           Settings
+        </Link>
+      </div>
+
+      {/* Export */}
+      <div className="px-3 mb-2">
+        <Link
+          href="/export"
+          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+            pathname === "/export"
+              ? "bg-blue-500/10 text-blue-500"
+              : "hover:bg-[var(--card-hover)]"
+          }`}
+        >
+          <Download className="w-4 h-4" />
+          Export
         </Link>
       </div>
 
