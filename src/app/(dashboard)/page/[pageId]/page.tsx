@@ -294,13 +294,12 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
             }}
             className={`p-2 rounded-lg transition-colors ${
               page.color 
-                ? "ring-2 ring-offset-2"
+                ? "ring-2 ring-offset-2 ring-current"
                 : "hover:bg-[var(--card-hover)]"
             }`}
             style={page.color ? { 
               backgroundColor: page.color,
               color: 'white',
-              ringColor: page.color,
             } : undefined}
             title={page.color ? COLOR_NAMES[page.color] || "Custom color" : "Add color"}
           >

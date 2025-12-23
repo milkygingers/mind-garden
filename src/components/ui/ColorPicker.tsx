@@ -7,7 +7,6 @@
  * Includes preset colors organized by mood/category.
  */
 
-import { useState } from "react";
 import { Check, Palette } from "lucide-react";
 
 // Beautiful color palette organized by category
