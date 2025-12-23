@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const type = searchParams.get("type") || "all";
     const format = searchParams.get("format") || "json";
 
-    let data: Record<string, unknown> = {};
+    const data: Record<string, unknown> = {};
     let filename = "mind-garden-export";
     let contentType = "application/json";
     let content = "";
