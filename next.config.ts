@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Disable strict mode to prevent double-rendering in development
+  reactStrictMode: false,
+  
+  // Required for Prisma in serverless environments
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
+  },
 };
 
 export default nextConfig;
