@@ -13,12 +13,10 @@ import { DatabaseTable, Column, Row } from "@/components/database/DatabaseTable"
 import { ColorPicker, COLOR_NAMES } from "@/components/ui/ColorPicker";
 import {
   ArrowLeft,
-  Database,
   Loader2,
   MoreHorizontal,
   Trash2,
   Palette,
-  Settings,
 } from "lucide-react";
 
 interface DatabaseData {
