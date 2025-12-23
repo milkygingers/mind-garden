@@ -29,6 +29,7 @@ import {
   Trash2,
   Edit3,
   Palette,
+  Timer,
 } from "lucide-react";
 import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
 
@@ -275,7 +276,7 @@ export function Sidebar() {
       </div>
 
       {/* Favorites */}
-      <div className="px-3 mb-2">
+      <div className="px-3 mb-1">
         <Link
           href="/favorites"
           className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
@@ -286,6 +287,21 @@ export function Sidebar() {
         >
           <Star className="w-4 h-4" />
           Favorites
+        </Link>
+      </div>
+
+      {/* Timer */}
+      <div className="px-3 mb-2">
+        <Link
+          href="/timer"
+          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+            pathname === "/timer"
+              ? "bg-rose-500/10 text-rose-500"
+              : "hover:bg-[var(--card-hover)]"
+          }`}
+        >
+          <Timer className="w-4 h-4" />
+          Focus Timer
         </Link>
       </div>
 
