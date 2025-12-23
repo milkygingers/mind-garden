@@ -439,7 +439,65 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
         initialContent={initialContentRef.current}
         onUpdate={handleContentUpdate}
         placeholder="Start writing your thoughts..."
+        pageId={page.id}
       />
+
+      {/* Backlinks section */}
+      <BacklinksSection pageId={page.id} />
+    </div>
+  );
+}
+
+// Backlinks component
+function BacklinksSection({ pageId }: { pageId: string }) {
+  const [backlinks, setBacklinks] = useState<Array<{
+    id: string;
+    title: string;
+    icon: string | null;
+    color: string | null;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBacklinks = async () => {
+      try {
+        const res = await fetch(`/api/pages/${pageId}/backlinks`);
+        if (res.ok) {
+          const data = await res.json();
+          setBacklinks(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch backlinks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBacklinks();
+  }, [pageId]);
+
+  if (loading || backlinks.length === 0) return null;
+
+  return (
+    <div className="mt-12 pt-8 border-t border-[var(--border)]">
+      <h3 className="text-sm font-medium text-[var(--muted)] mb-4 flex items-center gap-2">
+        <Link href="#" className="w-4 h-4" />
+        {backlinks.length} page{backlinks.length !== 1 ? "s" : ""} link to this
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {backlinks.map((page) => (
+          <Link
+            key={page.id}
+            href={`/page/${page.id}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-lg hover:border-[var(--garden-500)] transition-colors text-sm"
+          >
+            <span>{page.icon || "📄"}</span>
+            <span style={page.color ? { color: page.color } : undefined}>
+              {page.title}
+            </span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
