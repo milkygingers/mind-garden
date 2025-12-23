@@ -20,7 +20,7 @@ export default async function DashboardPage() {
     orderBy: { updatedAt: "desc" },
     take: 6,
     include: {
-      folder: { select: { name: true, icon: true } },
+      folder: { select: { name: true, icon: true, color: true } },
     },
   });
 
@@ -66,14 +66,29 @@ export default async function DashboardPage() {
             <Link
               key={folder.id}
               href={`/folder/${folder.id}`}
-              className="group p-5 bg-[var(--card)] border border-[var(--border)] rounded-xl hover:border-garden-500/50 hover:shadow-lg transition-all animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="group p-5 bg-[var(--card)] border border-[var(--border)] rounded-xl hover:shadow-lg transition-all animate-fade-in overflow-hidden relative"
+              style={{ 
+                animationDelay: `${index * 0.1}s`,
+                borderColor: folder.color ? `${folder.color}50` : undefined,
+              }}
             >
+              {/* Color accent bar */}
+              {folder.color && (
+                <div 
+                  className="absolute top-0 left-0 right-0 h-1"
+                  style={{ backgroundColor: folder.color }}
+                />
+              )}
               <div className="flex items-start justify-between mb-3">
                 <span className="text-3xl">{folder.icon}</span>
                 <ArrowRight className="w-5 h-5 text-[var(--muted)] group-hover:text-garden-500 group-hover:translate-x-1 transition-all" />
               </div>
-              <h3 className="font-semibold mb-1">{folder.name}</h3>
+              <h3 
+                className="font-semibold mb-1"
+                style={folder.color ? { color: folder.color } : undefined}
+              >
+                {folder.name}
+              </h3>
               <p className="text-sm text-[var(--muted)]">
                 {folder._count.pages} {folder._count.pages === 1 ? "page" : "pages"}
               </p>
@@ -118,19 +133,38 @@ export default async function DashboardPage() {
               <Link
                 key={page.id}
                 href={`/page/${page.id}`}
-                className="group p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl hover:border-garden-500/50 hover:shadow-md transition-all animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
+                className="group p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl hover:shadow-md transition-all animate-fade-in overflow-hidden relative"
+                style={{ 
+                  animationDelay: `${index * 0.05}s`,
+                  borderColor: page.color ? `${page.color}50` : undefined,
+                }}
               >
+                {/* Color accent bar */}
+                {page.color && (
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-1"
+                    style={{ backgroundColor: page.color }}
+                  />
+                )}
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">
                     {page.icon || "📄"}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium truncate group-hover:text-garden-600 transition-colors">
+                    <h3 
+                      className="font-medium truncate group-hover:text-garden-600 transition-colors"
+                      style={page.color ? { color: page.color } : undefined}
+                    >
                       {page.title}
                     </h3>
                     {page.folder && (
                       <p className="text-sm text-[var(--muted)] flex items-center gap-1 mt-1">
+                        {page.folder.color && (
+                          <span 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: page.folder.color }}
+                          />
+                        )}
                         <span>{page.folder.icon}</span>
                         {page.folder.name}
                       </p>
@@ -155,9 +189,9 @@ export default async function DashboardPage() {
           💡 Quick Tips
         </h3>
         <ul className="space-y-2 text-sm text-garden-700 dark:text-garden-300">
+          <li>• <strong>Right-click</strong> folders to change their color</li>
+          <li>• Click the <strong>palette icon</strong> on pages to add color</li>
           <li>• Use <strong>Projects</strong> for active goals with deadlines</li>
-          <li>• Use <strong>Areas</strong> for ongoing responsibilities</li>
-          <li>• Use <strong>Resources</strong> for reference materials</li>
           <li>• Use <strong>Archive</strong> for completed or inactive items</li>
         </ul>
       </section>
@@ -180,4 +214,3 @@ function formatRelativeTime(date: Date): string {
   
   return new Date(date).toLocaleDateString();
 }
-

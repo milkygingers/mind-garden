@@ -14,6 +14,7 @@ import { useEffect, useState, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageEditor } from "@/components/editor/PageEditor";
+import { ColorPicker, COLOR_NAMES } from "@/components/ui/ColorPicker";
 import {
   ArrowLeft,
   Star,
@@ -23,6 +24,7 @@ import {
   Clock,
   Loader2,
   Check,
+  Palette,
 } from "lucide-react";
 
 // Page data type
@@ -56,6 +58,7 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   
   // Use refs for timeout to avoid re-render loops
@@ -107,7 +110,7 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
               ...prev,
               title: updates.title ?? prev.title,
               icon: updates.icon ?? prev.icon,
-              color: updates.color ?? prev.color,
+              color: updates.color !== undefined ? updates.color : prev.color,
               isFavorite: updates.isFavorite ?? prev.isFavorite,
               updatedAt: updated.updatedAt,
               // Don't update content from response - editor has latest
@@ -178,6 +181,13 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
     setShowEmojiPicker(false);
   };
 
+  // Set color
+  const setColor = (color: string | null) => {
+    setPage((prev) => (prev ? { ...prev, color } : prev));
+    savePage({ color });
+    setShowColorPicker(false);
+  };
+
   // Delete page
   const deletePage = async () => {
     if (!confirm("Are you sure you want to delete this page?")) return;
@@ -196,6 +206,7 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
   useEffect(() => {
     const handleClick = () => {
       setShowEmojiPicker(false);
+      setShowColorPicker(false);
       setShowMenu(false);
     };
     window.addEventListener("click", handleClick);
@@ -226,6 +237,14 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
 
   return (
     <div className="max-w-4xl mx-auto p-8 animate-fade-in">
+      {/* Color accent bar at top */}
+      {page.color && (
+        <div 
+          className="h-1 -mx-8 -mt-8 mb-8 rounded-t-lg"
+          style={{ backgroundColor: page.color }}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link
@@ -264,6 +283,43 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
           )}
         </span>
 
+        {/* Color button */}
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowColorPicker(!showColorPicker);
+              setShowEmojiPicker(false);
+              setShowMenu(false);
+            }}
+            className={`p-2 rounded-lg transition-colors ${
+              page.color 
+                ? "ring-2 ring-offset-2"
+                : "hover:bg-[var(--card-hover)]"
+            }`}
+            style={page.color ? { 
+              backgroundColor: page.color,
+              color: 'white',
+              ringColor: page.color,
+            } : undefined}
+            title={page.color ? COLOR_NAMES[page.color] || "Custom color" : "Add color"}
+          >
+            <Palette className="w-5 h-5" />
+          </button>
+
+          {showColorPicker && (
+            <div
+              className="absolute right-0 top-full mt-2 p-3 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl z-50 animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ColorPicker
+                selectedColor={page.color}
+                onColorSelect={setColor}
+              />
+            </div>
+          )}
+        </div>
+
         {/* Favorite button */}
         <button
           onClick={toggleFavorite}
@@ -283,6 +339,8 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
             onClick={(e) => {
               e.stopPropagation();
               setShowMenu(!showMenu);
+              setShowEmojiPicker(false);
+              setShowColorPicker(false);
             }}
             className="p-2 rounded-lg hover:bg-[var(--card-hover)] transition-colors"
           >
@@ -314,6 +372,8 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
             onClick={(e) => {
               e.stopPropagation();
               setShowEmojiPicker(!showEmojiPicker);
+              setShowColorPicker(false);
+              setShowMenu(false);
             }}
             className="text-5xl hover:bg-[var(--card-hover)] rounded-xl p-2 transition-colors"
           >
@@ -350,6 +410,7 @@ export default function PageView({ params }: { params: Promise<{ pageId: string 
             onBlur={handleTitleBlur}
             placeholder="Untitled"
             className="w-full text-4xl font-display font-bold bg-transparent border-none focus:outline-none placeholder:text-[var(--muted)]"
+            style={page.color ? { color: page.color } : undefined}
           />
           <p className="text-sm text-[var(--muted)] mt-2 flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />

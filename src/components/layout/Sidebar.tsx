@@ -6,7 +6,7 @@
  * The main navigation sidebar with:
  * - User profile
  * - Search
- * - PARA folders
+ * - PARA folders with color coding
  * - Quick actions
  */
 
@@ -28,13 +28,16 @@ import {
   FolderPlus,
   Trash2,
   Edit3,
+  Palette,
 } from "lucide-react";
+import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
 
 // Types for our data
 interface Page {
   id: string;
   title: string;
   icon: string | null;
+  color: string | null;
 }
 
 interface Folder {
@@ -63,6 +66,7 @@ export function Sidebar() {
   const [contextMenu, setContextMenu] = useState<{ folderId: string; x: number; y: number } | null>(null);
   const [editingFolder, setEditingFolder] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [colorPickerFolder, setColorPickerFolder] = useState<string | null>(null);
 
   // Fetch folders - memoized to prevent recreation
   const fetchFolders = useCallback(async () => {
@@ -187,15 +191,40 @@ export function Sidebar() {
     setEditingFolder(null);
   }, [editingName, fetchFolders]);
 
+  const handleColorChange = useCallback(async (folderId: string, color: string | null) => {
+    try {
+      const res = await fetch(`/api/folders/${folderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ color }),
+      });
+      if (res.ok) {
+        fetchFolders();
+      }
+    } catch (error) {
+      console.error("Failed to update folder color:", error);
+    }
+    setColorPickerFolder(null);
+    setContextMenu(null);
+  }, [fetchFolders]);
+
   const startEditing = useCallback((folder: Folder) => {
     setEditingFolder(folder.id);
     setEditingName(folder.name);
     setContextMenu(null);
   }, []);
 
+  const openColorPicker = useCallback((folderId: string) => {
+    setColorPickerFolder(folderId);
+    setContextMenu(null);
+  }, []);
+
   // Close context menu when clicking outside
   useEffect(() => {
-    const handleClick = () => setContextMenu(null);
+    const handleClick = () => {
+      setContextMenu(null);
+      setColorPickerFolder(null);
+    };
     window.addEventListener("click", handleClick);
     return () => window.removeEventListener("click", handleClick);
   }, []);
@@ -316,6 +345,8 @@ export function Sidebar() {
                 editingName={editingName}
                 onEditNameChange={setEditingName}
                 onEditSubmit={() => handleRenameFolder(folder.id)}
+                showColorPicker={colorPickerFolder === folder.id}
+                onColorChange={(color) => handleColorChange(folder.id, color)}
               />
             ))}
           </nav>
@@ -325,7 +356,7 @@ export function Sidebar() {
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-50 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-xl py-1 min-w-[140px] animate-fade-in"
+          className="fixed z-50 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-xl py-1 min-w-[160px] animate-fade-in"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -338,6 +369,13 @@ export function Sidebar() {
           >
             <Edit3 className="w-4 h-4" />
             Rename
+          </button>
+          <button
+            onClick={() => openColorPicker(contextMenu.folderId)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--card-hover)] transition-colors"
+          >
+            <Palette className="w-4 h-4" />
+            Change color
           </button>
           <button
             onClick={() => handleDeleteFolder(contextMenu.folderId)}
@@ -388,6 +426,8 @@ interface FolderItemProps {
   editingName: string;
   onEditNameChange: (name: string) => void;
   onEditSubmit: () => void;
+  showColorPicker: boolean;
+  onColorChange: (color: string | null) => void;
 }
 
 function FolderItem({
@@ -401,6 +441,8 @@ function FolderItem({
   editingName,
   onEditNameChange,
   onEditSubmit,
+  showColorPicker,
+  onColorChange,
 }: FolderItemProps) {
   const hasContent = folder.pages.length > 0 || (folder.children?.length ?? 0) > 0;
 
@@ -409,6 +451,10 @@ function FolderItem({
       {/* Folder row */}
       <div
         className="group flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-[var(--card-hover)] transition-colors cursor-pointer"
+        style={folder.color ? { 
+          backgroundColor: `${folder.color}15`,
+          borderLeft: `3px solid ${folder.color}`,
+        } : undefined}
         onContextMenu={onContextMenu}
       >
         <button
@@ -424,6 +470,9 @@ function FolderItem({
         
         <span className="text-base">{folder.icon || "📁"}</span>
         
+        {/* Color dot indicator */}
+        {folder.color && <ColorDot color={folder.color} size="sm" />}
+        
         {isEditing ? (
           <input
             type="text"
@@ -438,7 +487,11 @@ function FolderItem({
             className="flex-1 px-1 py-0.5 text-sm bg-[var(--background)] border border-garden-500 rounded focus:outline-none"
           />
         ) : (
-          <span className="flex-1 text-sm truncate" onClick={onToggle}>
+          <span 
+            className="flex-1 text-sm truncate" 
+            onClick={onToggle}
+            style={folder.color ? { color: folder.color } : undefined}
+          >
             {folder.name}
           </span>
         )}
@@ -455,6 +508,20 @@ function FolderItem({
         </button>
       </div>
 
+      {/* Color picker dropdown */}
+      {showColorPicker && (
+        <div 
+          className="ml-6 mt-1 p-3 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-xl animate-fade-in"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ColorPicker
+            selectedColor={folder.color}
+            onColorSelect={onColorChange}
+            showLabel={false}
+          />
+        </div>
+      )}
+
       {/* Children (pages and subfolders) */}
       {isExpanded && (
         <div className="ml-4 pl-2 border-l border-[var(--border)]">
@@ -468,12 +535,17 @@ function FolderItem({
                   ? "bg-garden-500/10 text-garden-600"
                   : "hover:bg-[var(--card-hover)] text-[var(--muted)]"
               }`}
+              style={page.color && pathname !== `/page/${page.id}` ? {
+                borderLeft: `2px solid ${page.color}`,
+                paddingLeft: '6px',
+              } : undefined}
             >
               {page.icon ? (
                 <span className="text-base">{page.icon}</span>
               ) : (
                 <FileText className="w-4 h-4" />
               )}
+              {page.color && <ColorDot color={page.color} size="sm" />}
               <span className="truncate">{page.title}</span>
             </Link>
           ))}
