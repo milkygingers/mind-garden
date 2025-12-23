@@ -32,6 +32,7 @@ import {
   Timer,
   Database,
   Target,
+  Settings,
 } from "lucide-react";
 import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
 
@@ -323,7 +324,7 @@ export function Sidebar() {
       </div>
 
       {/* Databases */}
-      <div className="px-3 mb-2">
+      <div className="px-3 mb-1">
         <Link
           href="/databases"
           className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
@@ -334,6 +335,21 @@ export function Sidebar() {
         >
           <Database className="w-4 h-4" />
           Databases
+        </Link>
+      </div>
+
+      {/* Settings */}
+      <div className="px-3 mb-2">
+        <Link
+          href="/settings"
+          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+            pathname === "/settings"
+              ? "bg-[var(--garden-500)]/10 text-[var(--garden-500)]"
+              : "hover:bg-[var(--card-hover)]"
+          }`}
+        >
+          <Settings className="w-4 h-4" />
+          Settings
         </Link>
       </div>
 
