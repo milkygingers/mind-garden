@@ -8,15 +8,17 @@
  * - Inline editing
  * - Add/delete rows
  * - Add/delete columns
+ * - Automatic totals for number columns
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Plus,
   Trash2,
   GripVertical,
   Check,
   ChevronDown,
+  Calculator,
 } from "lucide-react";
 
 // Column type definition
@@ -43,6 +45,7 @@ interface DatabaseTableProps {
   onUpdateColumn: (columnId: string, updates: Partial<Column>) => void;
   onDeleteColumn: (columnId: string) => void;
   color?: string | null;
+  showTotals?: boolean; // Show totals row for number columns
 }
 
 export function DatabaseTable({
@@ -54,12 +57,49 @@ export function DatabaseTable({
   onAddColumn,
   onDeleteColumn,
   color,
+  showTotals = true,
 }: DatabaseTableProps) {
   const [editingCell, setEditingCell] = useState<{ rowId: string; columnId: string } | null>(null);
   const [showColumnMenu, setShowColumnMenu] = useState<string | null>(null);
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const [newColumnType, setNewColumnType] = useState<Column["type"]>("text");
+
+  // Calculate totals for number columns
+  const columnTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    
+    columns.forEach((col) => {
+      if (col.type === "number") {
+        totals[col.id] = rows.reduce((sum, row) => {
+          const value = Number(row.data[col.id]) || 0;
+          return sum + value;
+        }, 0);
+      }
+    });
+    
+    return totals;
+  }, [columns, rows]);
+
+  // Check if there are any number columns
+  const hasNumberColumns = columns.some((col) => col.type === "number");
+
+  // Calculate item subtotals (price × quantity) if both columns exist
+  const itemSubtotals = useMemo(() => {
+    const priceCol = columns.find((c) => c.name.toLowerCase().includes("price"));
+    const qtyCol = columns.find((c) => c.name.toLowerCase().includes("qty") || c.name.toLowerCase().includes("quantity"));
+    
+    if (!priceCol || !qtyCol) return null;
+    
+    const subtotals: Record<string, number> = {};
+    rows.forEach((row) => {
+      const price = Number(row.data[priceCol.id]) || 0;
+      const qty = Number(row.data[qtyCol.id]) || 1;
+      subtotals[row.id] = price * qty;
+    });
+    
+    return { subtotals, total: Object.values(subtotals).reduce((a, b) => a + b, 0) };
+  }, [columns, rows]);
 
   // Handle cell value change
   const handleCellChange = useCallback(
@@ -141,6 +181,12 @@ export function DatabaseTable({
                 )}
               </th>
             ))}
+            {/* Subtotal column header */}
+            {itemSubtotals && (
+              <th className="p-2 bg-[var(--background)] border-b border-r border-[var(--border)] text-left text-sm font-medium min-w-[80px]">
+                <span style={color ? { color } : undefined}>Subtotal</span>
+              </th>
+            )}
             {/* Add column button */}
             <th className="p-2 bg-[var(--background)] border-b border-[var(--border)] w-10">
               <button
@@ -191,13 +237,50 @@ export function DatabaseTable({
                   />
                 </td>
               ))}
-              <td className="border-b border-[var(--border)]" />
+              {/* Row subtotal for shopping lists */}
+              <td className="border-b border-[var(--border)] px-2 text-sm">
+                {itemSubtotals && itemSubtotals.subtotals[row.id] > 0 && (
+                  <span 
+                    className="font-medium opacity-70"
+                    style={color ? { color } : undefined}
+                  >
+                    ${itemSubtotals.subtotals[row.id].toFixed(2)}
+                  </span>
+                )}
+              </td>
             </tr>
           ))}
           
+          {/* Totals row */}
+          {showTotals && hasNumberColumns && !itemSubtotals && (
+            <tr className="bg-[var(--background)] font-medium">
+              <td className="p-2 border-t-2 border-[var(--border)]">
+                <Calculator className="w-4 h-4 text-[var(--muted)]" />
+              </td>
+              {columns.map((column) => (
+                <td
+                  key={`total-${column.id}`}
+                  className="px-3 py-2 border-t-2 border-r border-[var(--border)] text-sm"
+                >
+                  {column.type === "number" ? (
+                    <span style={color ? { color } : undefined}>
+                      {column.name.toLowerCase().includes("price") 
+                        ? `$${columnTotals[column.id]?.toFixed(2) || "0.00"}`
+                        : columnTotals[column.id] || 0
+                      }
+                    </span>
+                  ) : column.id === columns[0]?.id ? (
+                    <span className="text-[var(--muted)]">Total</span>
+                  ) : null}
+                </td>
+              ))}
+              <td className="border-t-2 border-[var(--border)]" />
+            </tr>
+          )}
+
           {/* Add row button */}
           <tr>
-            <td colSpan={columns.length + 2} className="p-0">
+            <td colSpan={columns.length + (itemSubtotals ? 3 : 2)} className="p-0">
               <button
                 onClick={onAddRow}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--muted)] hover:bg-[var(--card-hover)] transition-colors"
@@ -209,6 +292,35 @@ export function DatabaseTable({
           </tr>
         </tbody>
       </table>
+
+      {/* Grand total card for shopping lists */}
+      {itemSubtotals && (
+        <div 
+          className="mt-4 p-4 rounded-xl border-2 flex items-center justify-between"
+          style={{ 
+            borderColor: color || "var(--border)",
+            backgroundColor: color ? `${color}10` : "var(--card)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div 
+              className="p-2 rounded-lg"
+              style={{ backgroundColor: color || "var(--garden-500)" }}
+            >
+              <Calculator className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-[var(--muted)]">Grand Total</p>
+              <p className="text-2xl font-bold" style={color ? { color } : undefined}>
+                ${itemSubtotals.total.toFixed(2)}
+              </p>
+            </div>
+          </div>
+          <div className="text-right text-sm text-[var(--muted)]">
+            {rows.length} {rows.length === 1 ? "item" : "items"}
+          </div>
+        </div>
+      )}
 
       {/* Add column modal */}
       {showAddColumn && (
