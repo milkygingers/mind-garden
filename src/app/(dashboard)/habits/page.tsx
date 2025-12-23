@@ -14,8 +14,12 @@ import {
   Flame,
   Trash2,
   X,
+  Bell,
+  BellOff,
+  Clock,
 } from "lucide-react";
 import { HabitCalendar } from "@/components/habits/HabitCalendar";
+import { PRESET_TIMES, formatTime } from "@/lib/notifications";
 
 interface HabitLog {
   id: string;
@@ -29,6 +33,8 @@ interface Habit {
   icon: string;
   color: string;
   description?: string;
+  reminderEnabled: boolean;
+  reminderTime: string | null;
   logs: HabitLog[];
 }
 
@@ -56,6 +62,9 @@ export default function HabitsPage() {
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✨");
   const [newHabitColor, setNewHabitColor] = useState(HABIT_COLORS[0]);
+  const [newHabitReminder, setNewHabitReminder] = useState(false);
+  const [newHabitReminderTime, setNewHabitReminderTime] = useState("09:00");
+  const [editingReminder, setEditingReminder] = useState<string | null>(null);
 
   // Fetch habits
   const fetchHabits = useCallback(async () => {
@@ -89,6 +98,8 @@ export default function HabitsPage() {
           name: newHabitName,
           icon: newHabitIcon,
           color: newHabitColor,
+          reminderEnabled: newHabitReminder,
+          reminderTime: newHabitReminder ? newHabitReminderTime : null,
         }),
       });
 
@@ -98,10 +109,37 @@ export default function HabitsPage() {
         setNewHabitName("");
         setNewHabitIcon("✨");
         setNewHabitColor(HABIT_COLORS[0]);
+        setNewHabitReminder(false);
+        setNewHabitReminderTime("09:00");
         setShowNewHabit(false);
       }
     } catch (error) {
       console.error("Failed to create habit:", error);
+    }
+  };
+
+  // Update habit reminder
+  const handleUpdateReminder = async (habitId: string, enabled: boolean, time: string | null) => {
+    try {
+      const res = await fetch(`/api/habits/${habitId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reminderEnabled: enabled,
+          reminderTime: time,
+        }),
+      });
+
+      if (res.ok) {
+        setHabits(habits.map((h) =>
+          h.id === habitId
+            ? { ...h, reminderEnabled: enabled, reminderTime: time }
+            : h
+        ));
+        setEditingReminder(null);
+      }
+    } catch (error) {
+      console.error("Failed to update reminder:", error);
     }
   };
 
@@ -308,6 +346,49 @@ export default function HabitsPage() {
               </div>
             </div>
 
+            {/* Reminder settings */}
+            <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--border)]">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-[var(--garden-500)]" />
+                  <label className="text-sm font-medium">Daily Reminder</label>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNewHabitReminder(!newHabitReminder)}
+                  className={`
+                    relative w-12 h-7 rounded-full transition-colors duration-300
+                    ${newHabitReminder ? "bg-[var(--garden-500)]" : "bg-gray-300 dark:bg-gray-600"}
+                  `}
+                >
+                  <div
+                    className={`
+                      absolute top-1 w-5 h-5 bg-white rounded-full shadow-md
+                      transition-transform duration-300
+                      ${newHabitReminder ? "translate-x-6" : "translate-x-1"}
+                    `}
+                  />
+                </button>
+              </div>
+              
+              {newHabitReminder && (
+                <div className="mt-3">
+                  <label className="block text-xs text-[var(--muted)] mb-2">Reminder Time</label>
+                  <select
+                    value={newHabitReminderTime}
+                    onChange={(e) => setNewHabitReminderTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-[var(--card)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--garden-500)]"
+                  >
+                    {PRESET_TIMES.map((time) => (
+                      <option key={time.value} value={time.value}>
+                        {time.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2 pt-2">
               <button
                 type="submit"
@@ -355,13 +436,91 @@ export default function HabitsPage() {
                 onNextMonth={goToNextMonth}
                 onToggleDay={(date) => handleToggleDay(habit.id, date)}
               />
-              <button
-                onClick={() => handleDeleteHabit(habit.id)}
-                className="absolute top-4 right-4 p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Delete habit"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              
+              {/* Action buttons */}
+              <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Reminder button */}
+                <button
+                  onClick={() => setEditingReminder(editingReminder === habit.id ? null : habit.id)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    habit.reminderEnabled 
+                      ? "bg-[var(--garden-500)]/20 text-[var(--garden-500)]" 
+                      : "bg-[var(--background)]/80 text-[var(--muted)] hover:text-[var(--foreground)]"
+                  }`}
+                  title={habit.reminderEnabled ? `Reminder at ${formatTime(habit.reminderTime!)}` : "Set reminder"}
+                >
+                  {habit.reminderEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                </button>
+                
+                {/* Delete button */}
+                <button
+                  onClick={() => handleDeleteHabit(habit.id)}
+                  className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg"
+                  title="Delete habit"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Reminder dropdown */}
+              {editingReminder === habit.id && (
+                <div className="absolute top-14 right-4 z-10 w-64 p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl animate-fade-in">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[var(--garden-500)]" />
+                      <span className="text-sm font-medium">Reminder</span>
+                    </div>
+                    <button
+                      onClick={() => setEditingReminder(null)}
+                      className="p-1 hover:bg-[var(--card-hover)] rounded"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Enable reminder</span>
+                      <button
+                        onClick={() => handleUpdateReminder(
+                          habit.id, 
+                          !habit.reminderEnabled, 
+                          habit.reminderTime || "09:00"
+                        )}
+                        className={`
+                          relative w-10 h-6 rounded-full transition-colors duration-300
+                          ${habit.reminderEnabled ? "bg-[var(--garden-500)]" : "bg-gray-300 dark:bg-gray-600"}
+                        `}
+                      >
+                        <div
+                          className={`
+                            absolute top-1 w-4 h-4 bg-white rounded-full shadow-md
+                            transition-transform duration-300
+                            ${habit.reminderEnabled ? "translate-x-5" : "translate-x-1"}
+                          `}
+                        />
+                      </button>
+                    </div>
+
+                    {habit.reminderEnabled && (
+                      <div>
+                        <label className="block text-xs text-[var(--muted)] mb-1">Time</label>
+                        <select
+                          value={habit.reminderTime || "09:00"}
+                          onChange={(e) => handleUpdateReminder(habit.id, true, e.target.value)}
+                          className="w-full px-2 py-1.5 bg-[var(--background)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--garden-500)]"
+                        >
+                          {PRESET_TIMES.map((time) => (
+                            <option key={time.value} value={time.value}>
+                              {time.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

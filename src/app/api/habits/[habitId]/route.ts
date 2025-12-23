@@ -74,7 +74,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     const body = await request.json();
-    const { name, icon, color, description, frequency, targetDays, isArchived } = body;
+    const { name, icon, color, description, frequency, targetDays, isArchived, reminderEnabled, reminderTime } = body;
 
     const habit = await db.habit.update({
       where: { id: habitId },
@@ -86,6 +86,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         ...(frequency !== undefined && { frequency }),
         ...(targetDays !== undefined && { targetDays: JSON.stringify(targetDays) }),
         ...(isArchived !== undefined && { isArchived }),
+        ...(reminderEnabled !== undefined && { reminderEnabled }),
+        ...(reminderTime !== undefined && { reminderTime }),
       },
     });
 

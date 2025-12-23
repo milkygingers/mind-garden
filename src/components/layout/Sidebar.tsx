@@ -36,6 +36,7 @@ import {
   Download,
 } from "lucide-react";
 import { ColorPicker, ColorDot } from "@/components/ui/ColorPicker";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 // Types for our data
 interface Page {
@@ -246,13 +247,16 @@ export function Sidebar() {
             <Leaf className="w-6 h-6 text-garden-500 group-hover:rotate-12 transition-transform" />
             <span className="font-display font-bold text-lg">Mind Garden</span>
           </Link>
-          <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-lg hover:bg-[var(--card-hover)] transition-colors"
-            title={isDark ? "Light mode" : "Dark mode"}
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationCenter />
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg hover:bg-[var(--card-hover)] transition-colors"
+              title={isDark ? "Light mode" : "Dark mode"}
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </div>
 
